@@ -54,6 +54,34 @@ re-printed with the decoded/reassembled credential once the sniffer's parser rec
 completes a login. Nothing is guessed or brute-forced; every byte was already sitting in the
 payload the attacker's promiscuous NIC received.
 
+**Is the password visible in the raw `tcpdump` capture itself, without the sniffer?** Depends on
+the protocol — checked directly against `docs/captures/capture.pcap`:
+
+```
+$ strings capture.pcap | grep -i authorization
+Authorization: Basic Ym9iOmh1bnRlcjI=
+$ echo Ym9iOmh1bnRlcjI= | base64 -d
+bob:hunter2
+```
+
+For **HTTP**, yes — the whole header, `bob:hunter2` included, sits as one contiguous string in
+the raw capture. Base64 isn't encryption; any tool that can `strings`/`grep` a pcap and pipe the
+match through `base64 -d` recovers it, no custom sniffer required.
+
+```
+$ strings capture.pcap | grep -c hunter2
+0
+```
+
+For **Telnet**, the string `hunter2` never appears as one contiguous run of bytes anywhere in the
+capture — real Telnet sends one keystroke per TCP packet, so the password is scattered as seven
+separate single-byte packets (`h`, `u`, `n`, `t`, `e`, `r`, `2`). It *is* fully present in the
+capture (nothing is missing — see the raw per-frame lines in the screenshot above, and Wireshark's
+**Follow → TCP Stream** will visually reassemble it for a human), but no simple string search
+finds it. This is exactly why `sniffer.py`'s `handle_telnet()` exists: it buffers the
+client→server bytes packet-by-packet and reassembles them into a line itself, rather than relying
+on the credential already being one searchable string the way HTTP's is.
+
 ## b. Was the attack successful? Why / why not?
 
 **Yes**, fully successful, on both target protocols:
