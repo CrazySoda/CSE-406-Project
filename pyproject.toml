@@ -1,0 +1,6 @@
+[project]
+name = "cse406-sniffer-project"
+version = "0.1.0"
+description = "CSE406 Group 10: packet sniffing attack (HTTP/Telnet password sniffer)"
+requires-python = ">=3.9"
+dependencies = []
