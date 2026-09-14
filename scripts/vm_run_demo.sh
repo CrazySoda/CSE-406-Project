@@ -20,14 +20,14 @@ sleep 1
 gc_sudo attacker rm -f /sniffer_session.log
 gc_start_sudo attacker "python3 /home/$GUEST_USER/project/sniffer.py $GUEST_IFACE > /home/$GUEST_USER/sniffer.log 2>&1"
 
-# VirtualBox's internal-network switch has a real, observed ~60s "cold
-# start" delay after a VM boots before it actually begins mirroring
-# promiscuous traffic to a newly-started listener -- the sniffer's socket
-# is open and bound immediately, but sees nothing until the switch warms
-# up. Rather than guess a fixed sleep, retry the logins until the sniffer
-# actually reports a capture.
+# VirtualBox's internal-network switch has a real, observed "cold start"
+# delay after a VM boots before it actually begins mirroring promiscuous
+# traffic to a newly-started listener -- the sniffer's socket is open and
+# bound immediately, but sees nothing until the switch warms up. Observed
+# anywhere from ~10s to ~2 minutes across runs, so retry generously rather
+# than guess a fixed sleep.
 echo "[vm_run_demo] warming up (retrying logins until the sniffer reports a capture)..."
-for attempt in $(seq 1 10); do
+for attempt in $(seq 1 20); do
   gc_run victim /usr/bin/python3 /home/$GUEST_USER/project/http_login.py "$SERVER_IP" "$DEMO_USER" "$DEMO_PASS" > /dev/null
   if gc_sudo attacker grep -aq "credentials recovered" /sniffer_session.log 2>/dev/null; then
     echo "[vm_run_demo] sniffer is warm (took ~$((attempt * 8))s)"

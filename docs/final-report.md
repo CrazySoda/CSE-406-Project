@@ -27,6 +27,33 @@ Members: 2105128 - Nakib Arman, 2105143 - Fatin Ishrak Arian
    *** Telnet credentials recovered: bob:hunter2 ***
    ```
 
+### How the attacker actually recovers the username and password
+
+The sniffer never sees a "username" or "password" field as such — it only ever sees raw bytes on
+the wire. Recovery happens in two different ways depending on protocol, both implemented in
+`sniffer/sniffer.py`:
+
+- **HTTP** — the victim's browser/client sends the header `Authorization: Basic <base64>` on
+  every request once authenticated. The sniffer's `handle_http()` buffers each TCP stream's bytes,
+  regex-searches for that header, and simply **base64-decodes** the value — `bob:hunter2` is
+  right there in the decoded text, because Basic-Auth is *encoded*, not encrypted.
+- **Telnet** — there is no single "credentials packet" at all. The server sends a `login:` prompt,
+  the client's keystrokes for the username arrive as individual TCP segments (often one byte
+  each), then the server sends `Password:`, then the password keystrokes arrive the same way. The
+  sniffer's `handle_telnet()` watches the server→client direction for those two prompts to know
+  which stage it's in, buffers the client→server bytes until a line terminator, and hands the
+  first completed line to `telnet_username` and the second to the final recovered pair.
+
+Below is the sniffer's own log, filtered to show exactly this happening: three raw per-frame
+capture lines immediately followed by the extraction result, for both protocols in the same run:
+
+![Attacker credentials recovered](screenshots/attacker_credentials_recovered.png)
+
+The `[...]` line is not a separate event — it is the *same frame* as the raw line right above it,
+re-printed with the decoded/reassembled credential once the sniffer's parser recognizes it
+completes a login. Nothing is guessed or brute-forced; every byte was already sitting in the
+payload the attacker's promiscuous NIC received.
+
 ## b. Was the attack successful? Why / why not?
 
 **Yes**, fully successful, on both target protocols:
