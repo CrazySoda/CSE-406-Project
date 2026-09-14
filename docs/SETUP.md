@@ -4,6 +4,14 @@ Three VirtualBox VMs: **victim**, **server**, **attacker**, all Ubuntu Server 24
 and installed headlessly via `VBoxManage` (no clicking through installer screens). Run every
 command in this file on the **host** machine, in your own terminal.
 
+> **Fast path:** all of this is already wrapped in `scripts/vm_create.sh`, `scripts/vm_bootstrap.sh`
+> and `scripts/vm_run_demo.sh` — see the README. This file is the detailed walkthrough of what
+> those scripts do (useful for understanding a failure, or running a step by hand), including
+> three real issues we hit and their fixes: VirtualBox failing to build its kernel module against
+> a newer host kernel (§0), the Ubuntu installer hanging with a 2nd NIC present (worked around by
+> the scripts, §1), and `vboxadd-service` losing a race with udev on boot (also auto-fixed by the
+> scripts' `wait_for_guest`, mentioned again in Troubleshooting below).
+
 Because these are disposable lab VMs used only for this demo, the unattended install bakes in
 passwordless `sudo` for the `ubuntu` user *inside each guest* — this is a guest-only convenience
 (not your host password) that lets the rest of this guide run non-interactively via
@@ -205,10 +213,20 @@ logins complete normally whether or not the sniffer is running (non-interference
 
 ## Troubleshooting
 
-- **`guestcontrol` commands hang/fail** → Guest Additions may not have finished installing yet;
-  re-run the `until ... guestcontrol ... run --exe /bin/true` wait loop from step 1.
+- **`guestcontrol` commands hang/fail right after a (re)boot** → real, reproducible bug:
+  `vboxadd-service` (Guest Additions) can start before udev has created `/dev/vboxguest`, fails,
+  and never retries -- `guestcontrol` then never comes up on its own. Fix: log in on the VM's
+  console (`VBoxManage controlvm <vm> keyboardputstring ...`, or the actual VirtualBox display)
+  and run `sudo modprobe vboxguest && sudo systemctl restart vboxadd-service`. `scripts/common.sh`'s
+  `wait_for_guest` does this automatically after 60s of no response, which is why the scripted
+  path doesn't need this step manually.
 - **Wrong NIC name** (`enp0s8` not found) → run
   `VBoxManage guestcontrol <vm> run --username ubuntu --password ubuntu --exe /usr/sbin/ip -- ip link`
   and substitute the actual second-NIC name everywhere above.
 - **Attacker sees nothing** → double check `VBoxManage showvminfo attacker | grep -i promisc`
-  shows `allow-all`, and that all three VMs used the exact same `--intnet2 sniffnet` name.
+  shows `allow-all`, and that all three VMs used the exact same `--intnet2 sniffnet` name. Also
+  real, also reproducible: VirtualBox's internal-network switch has an observed **~60s "cold
+  start" delay** after a VM boots before it actually begins mirroring promiscuous traffic to a
+  *newly-started* listener -- the sniffer's socket is open and bound immediately but captures
+  nothing until the switch warms up. `scripts/vm_run_demo.sh` handles this by retrying the login
+  every 8s until the sniffer reports a capture, rather than guessing a fixed delay.

@@ -13,6 +13,9 @@ All commands assume you're in the project root:
 Everything is stdlib-only Python, run through `uv` (no manual venv/pip needed — `uv run` creates
 and reuses `.venv` automatically).
 
+> **Fast path:** `./scripts/local_demo.sh` runs all of Part A below in one command. This section
+> is the manual walkthrough (useful if the script fails and you need to see which step broke).
+
 ---
 
 ## A. Local smoke test (same machine, loopback interface `lo`)

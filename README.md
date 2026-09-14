@@ -18,6 +18,7 @@ sniffer/          attacker: raw-socket sniffer + credential extractor (the core 
 server/           victim's server: HTTP Basic-Auth server, real telnetd setup script,
                    and a local mock telnet server for non-VM testing
 victim/           scripted HTTP and Telnet logins used to generate demo traffic
+scripts/          one-command wrappers for both the local test and the full 3-VM demo
 docs/             design report, course spec, setup guides, final report, screenshots, captures
 ```
 
@@ -29,32 +30,30 @@ interpreter/venv — no manual install step).
 ```bash
 git clone https://github.com/CrazySoda/CSE-406-Project.git
 cd CSE-406-Project
-
-# Terminal 1 — HTTP demo server (non-privileged port, no sudo)
-uv run python server/http_server.py 8080
-
-# Terminal 2 — local telnet stand-in (no root/apt install needed for this quick test)
-uv run python server/mock_telnet_server.py 2323
-
-# Terminal 3 — the sniffer itself (needs root for the raw socket; watches ports 8080/2323 here)
-sudo $(which uv) run python sniffer/sniffer.py lo 8080 2323
-
-# Terminal 4 — trigger the logins
-uv run python victim/http_login.py 127.0.0.1 bob hunter2 8080
-uv run python victim/telnet_login.py 127.0.0.1 bob hunter2 2323
+./scripts/local_demo.sh
 ```
 
-You should see `*** HTTP credentials recovered: bob:hunter2 ***` and the same for Telnet in
-Terminal 2's output. Full details and troubleshooting: **[docs/RUNNING.md](docs/RUNNING.md)**.
+Starts the HTTP + mock Telnet servers, the sniffer on loopback (prompts for your `sudo` password
+— needed for the raw socket), runs both victim logins, and prints what got recovered:
+`*** HTTP credentials recovered: bob:hunter2 ***` and the same for Telnet. Full details,
+troubleshooting, and the equivalent commands run by hand: **[docs/RUNNING.md](docs/RUNNING.md)**.
 
 ## Full 3-VM demo (matches the design report exactly)
 
 Three VirtualBox VMs (`victim`, `server`, `attacker`) on a shared Internal Network, real ports
-80/23, attacker's NIC in promiscuous mode. Fully scripted via `VBoxManage` (unattended install,
-no clicking through installer screens) — see **[docs/SETUP.md](docs/SETUP.md)** for the complete
-copy-pasteable command sequence, including the couple of gotchas we hit (VirtualBox/Secure Boot
-module signing, an Ubuntu installer quirk with a second NIC present during install) and their
-fixes.
+80/23, attacker's NIC in promiscuous mode.
+
+```bash
+./scripts/vm_create.sh      # one-time: creates + installs all 3 VMs (~15-20 min)
+./scripts/vm_bootstrap.sh   # one-time: static IPs, deploys the code, installs services
+./scripts/vm_run_demo.sh    # the actual demo -- re-run any time the VMs are up
+./scripts/vm_stop.sh        # shuts the VMs down when you're done (vm_start.sh brings them back)
+```
+
+See **[docs/SETUP.md](docs/SETUP.md)** for what each step does under the hood and the couple of
+real gotchas we hit along the way (VirtualBox/Secure Boot module signing, an Ubuntu installer
+quirk with a second NIC present during install, a VirtualBox internal-network "cold start" delay
+before promiscuous mirroring kicks in) — all of which the scripts already work around.
 
 ## Defense / bonus
 
