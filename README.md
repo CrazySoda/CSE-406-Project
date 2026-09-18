@@ -59,8 +59,8 @@ before promiscuous mirroring kicks in) — all of which the scripts already work
 ## Defense / bonus
 
 `docs/defense.md` — swapping Telnet for SSH on the same login, with byte-level proof
-(`strings capture.pcap | grep -c hunter2` → `0`) that the sniffer recovers nothing once the
-transport is encrypted.
+(`strings ssh_defense_capture.pcap | grep -c 2105143` → `0`) that the sniffer recovers nothing
+once the transport is encrypted.
 
 ## Requirements
 

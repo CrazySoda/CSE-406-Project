@@ -9,8 +9,8 @@ Members: 2105128 - Nakib Arman, 2105143 - Fatin Ishrak Arian
 192.168.56.0/24) — `victim` (.11), `server` (.12, HTTP Basic-Auth on :80 + Telnet on :23),
 `attacker` (.13, NIC in Promiscuous Mode "Allow All"). Full setup steps in `docs/SETUP.md`.
 
-1. `server` runs `server/http_server.py` (HTTP Basic-Auth) and the real system `telnetd`,
-   demo account `bob:hunter2`.
+1. `server` runs `server/http_server.py` (HTTP Basic-Auth, account `arzon:2105128`) and the real
+   system `telnetd` (account `arian:2105143`) — separate accounts per protocol.
 2. `attacker` runs `sniffer/sniffer.py enp0s8` as root — a raw `AF_PACKET` socket, hand-parsed
    Ethernet/IPv4/TCP headers, watching ports 80 and 23. Purely passive: no packets sent.
 3. `victim` performs a normal HTTP Basic-Auth login and a normal interactive Telnet login.
@@ -23,8 +23,8 @@ Members: 2105128 - Nakib Arman, 2105143 - Fatin Ishrak Arian
 
    Recovered:
    ```
-   *** HTTP credentials recovered: bob:hunter2 ***
-   *** Telnet credentials recovered: bob:hunter2 ***
+   *** HTTP credentials recovered: arzon:2105128 ***
+   *** Telnet credentials recovered: arian:2105143 ***
    ```
 
 ### How the attacker actually recovers the username and password
@@ -35,7 +35,7 @@ the wire. Recovery happens in two different ways depending on protocol, both imp
 
 - **HTTP** — the victim's browser/client sends the header `Authorization: Basic <base64>` on
   every request once authenticated. The sniffer's `handle_http()` buffers each TCP stream's bytes,
-  regex-searches for that header, and simply **base64-decodes** the value — `bob:hunter2` is
+  regex-searches for that header, and simply **base64-decodes** the value — `arzon:2105128` is
   right there in the decoded text, because Basic-Auth is *encoded*, not encrypted.
 - **Telnet** — there is no single "credentials packet" at all. The server sends a `login:` prompt,
   the client's keystrokes for the username arrive as individual TCP segments (often one byte
@@ -59,23 +59,24 @@ the protocol — checked directly against `docs/captures/capture.pcap`:
 
 ```
 $ strings capture.pcap | grep -i authorization
-Authorization: Basic Ym9iOmh1bnRlcjI=
-$ echo Ym9iOmh1bnRlcjI= | base64 -d
-bob:hunter2
+Authorization: Basic YXJ6b246MjEwNTEyOA==
+$ echo YXJ6b246MjEwNTEyOA== | base64 -d
+arzon:2105128
 ```
 
-For **HTTP**, yes — the whole header, `bob:hunter2` included, sits as one contiguous string in
+For **HTTP**, yes — the whole header, `arzon:2105128` included, sits as one contiguous string in
 the raw capture. Base64 isn't encryption; any tool that can `strings`/`grep` a pcap and pipe the
 match through `base64 -d` recovers it, no custom sniffer required.
 
 ```
-$ strings capture.pcap | grep -c hunter2
+$ strings capture.pcap | grep -c 2105143
 0
 ```
 
-For **Telnet**, the string `hunter2` never appears as one contiguous run of bytes anywhere in the
-capture — real Telnet sends one keystroke per TCP packet, so the password is scattered as seven
-separate single-byte packets (`h`, `u`, `n`, `t`, `e`, `r`, `2`). It *is* fully present in the
+For **Telnet**, the string `2105143` (the Telnet account's password) never appears as one
+contiguous run of bytes anywhere in the capture — real Telnet sends one keystroke per TCP packet,
+so the password is scattered as seven separate single-byte packets (`2`, `1`, `0`, `5`, `1`, `4`,
+`3`). It *is* fully present in the
 capture (nothing is missing — see the raw per-frame lines in the screenshot above, and Wireshark's
 **Follow → TCP Stream** will visually reassemble it for a human), but no simple string search
 finds it. This is exactly why `sniffer.py`'s `handle_telnet()` exists: it buffers the
@@ -86,8 +87,8 @@ on the credential already being one searchable string the way HTTP's is.
 
 **Yes**, fully successful, on both target protocols:
 
-- **Correctness** — the recovered `bob:hunter2` exactly matches what the victim typed, for both
-  HTTP and Telnet, verified over multiple independent runs.
+- **Correctness** — the recovered `arzon:2105128` (HTTP) and `arian:2105143` (Telnet) exactly
+  match what the victim typed, verified over multiple independent runs.
 - **Non-interference** — the victim's HTTP request (200 OK) and Telnet session (full shell
   access) completed identically whether or not the sniffer was running; the attacker never
   transmits anything.
@@ -107,15 +108,16 @@ on the credential already being one searchable string the way HTTP's is.
 |---|---|
 | **Attacker** | Per-frame log line (timestamp, src/dst MAC+IP+port, protocol) for every HTTP/Telnet frame on the segment; `*** ... credentials recovered ***` line for each successful login. Full log: `docs/captures/sniffer_session.log`. |
 | **Victim** | HTTP login: `Server responded 200: Welcome, authenticated user.` Telnet login: normal banner → `login:` → `Password:` → shell prompt (`docs/screenshots/victim_telnet_login.png`) — no indication anything is being observed. |
-| **Server** | Serves both `bob:hunter2` logins normally; `ss -tln` confirms it is simply listening on :80/:23 (and, after the defense was added, :22) with no awareness of the attacker (`docs/screenshots/server_listening_ports.png`). |
+| **Server** | Serves both the `arzon:2105128` (HTTP) and `arian:2105143` (Telnet) logins normally; `ss -tln` confirms it is simply listening on :80/:23 (and, after the defense was added, :22) with no awareness of the attacker (`docs/screenshots/server_listening_ports.png`). |
 
 ## d. Countermeasure (bonus)
 
-Implemented and tested: replacing Telnet with SSH for the same login. Full writeup, capture, and
-byte-level proof that the password is unrecoverable in `docs/defense.md` — summary:
+Implemented and tested: replacing Telnet with SSH for the same account (`arian:2105143`). Full
+writeup, capture, and byte-level proof that the password is unrecoverable in `docs/defense.md` —
+summary:
 
 ```
-$ strings ssh_defense_capture.pcap | grep -c hunter2
+$ strings ssh_defense_capture.pcap | grep -c 2105143
 0
 ```
 
