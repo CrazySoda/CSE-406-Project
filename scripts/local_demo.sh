@@ -17,6 +17,16 @@ TELNET_PORT=2323
 LOG_DIR=$(mktemp -d)
 trap 'echo "[local_demo] cleaning up..."; kill $HTTP_PID $TELNET_PID 2>/dev/null; sudo kill $SNIFFER_PID 2>/dev/null; true' EXIT
 
+# sudo's password prompt goes straight to /dev/tty, bypassing any output
+# redirect -- and a backgrounded (`&`) command can lose access to the
+# controlling terminal for that prompt entirely, so authenticating sudo
+# *inside* the backgrounded sniffer command below is unreliable (it can
+# silently fail to ever run). Authenticate here instead, in the foreground,
+# so the cached credential lets the backgrounded call proceed without
+# prompting again.
+echo "[local_demo] sniffer needs root for the raw socket -- authenticating now:"
+sudo -v
+
 echo "[local_demo] starting HTTP server on :$HTTP_PORT"
 uv run python server/http_server.py "$HTTP_PORT" > "$LOG_DIR/http_server.log" 2>&1 &
 HTTP_PID=$!
