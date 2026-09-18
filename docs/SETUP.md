@@ -226,8 +226,9 @@ logins complete normally whether or not the sniffer is running (non-interference
 - **Attacker sees nothing** → double check `VBoxManage showvminfo attacker | grep -i promisc`
   shows `allow-all`, and that all three VMs used the exact same `--intnet2 sniffnet` name. Also
   real, also reproducible: VirtualBox's internal-network switch has an observed **"cold start"
-  delay (anywhere from ~10s to ~2 minutes across runs)** after a VM boots before it actually
-  begins mirroring promiscuous traffic to a *newly-started* listener -- the sniffer's socket is
-  open and bound immediately but captures nothing until the switch warms up. `scripts/vm_run_demo.sh`
-  handles this by retrying the login every 8s (up to ~2.5 minutes) until the sniffer reports a
-  capture, rather than guessing a fixed delay.
+  delay (anywhere from ~10s to ~3.5 minutes across runs -- genuinely this variable)** after a VM
+  boots before it actually begins mirroring promiscuous traffic to a *newly-started* listener --
+  the sniffer's socket is open and bound immediately but captures nothing until the switch warms
+  up. `scripts/vm_run_demo.sh` handles this by retrying the login every 8s (up to ~8 minutes)
+  until the sniffer reports a capture, rather than guessing a fixed delay -- just let it run if it
+  prints "still warming up".

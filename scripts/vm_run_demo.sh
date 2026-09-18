@@ -24,14 +24,18 @@ gc_start_sudo attacker "python3 /home/$GUEST_USER/project/sniffer.py $GUEST_IFAC
 # delay after a VM boots before it actually begins mirroring promiscuous
 # traffic to a newly-started listener -- the sniffer's socket is open and
 # bound immediately, but sees nothing until the switch warms up. Observed
-# anywhere from ~10s to ~2 minutes across runs, so retry generously rather
-# than guess a fixed sleep.
-echo "[vm_run_demo] warming up (retrying logins until the sniffer reports a capture)..."
-for attempt in $(seq 1 20); do
+# anywhere from ~10s to ~3.5 minutes across runs (genuinely this variable --
+# not a bug we've found a tighter bound for), so retry patiently rather than
+# guess a fixed sleep, and say so if it's taking a while.
+echo "[vm_run_demo] warming up (retrying logins until the sniffer reports a capture -- can take a few minutes)..."
+for attempt in $(seq 1 60); do
   gc_run victim /usr/bin/python3 /home/$GUEST_USER/project/http_login.py "$SERVER_IP" "$HTTP_USER" "$HTTP_PASS" > /dev/null
   if gc_sudo attacker grep -aq "credentials recovered" /sniffer_session.log 2>/dev/null; then
     echo "[vm_run_demo] sniffer is warm (took ~$((attempt * 8))s)"
     break
+  fi
+  if [ $((attempt % 5)) -eq 0 ]; then
+    echo "[vm_run_demo] still warming up (~$((attempt * 8))s so far)..."
   fi
   sleep 8
 done
