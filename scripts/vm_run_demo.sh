@@ -28,7 +28,7 @@ gc_start_sudo attacker "python3 /home/$GUEST_USER/project/sniffer.py $GUEST_IFAC
 # than guess a fixed sleep.
 echo "[vm_run_demo] warming up (retrying logins until the sniffer reports a capture)..."
 for attempt in $(seq 1 20); do
-  gc_run victim /usr/bin/python3 /home/$GUEST_USER/project/http_login.py "$SERVER_IP" "$DEMO_USER" "$DEMO_PASS" > /dev/null
+  gc_run victim /usr/bin/python3 /home/$GUEST_USER/project/http_login.py "$SERVER_IP" "$HTTP_USER" "$HTTP_PASS" > /dev/null
   if gc_sudo attacker grep -aq "credentials recovered" /sniffer_session.log 2>/dev/null; then
     echo "[vm_run_demo] sniffer is warm (took ~$((attempt * 8))s)"
     break
@@ -37,7 +37,7 @@ for attempt in $(seq 1 20); do
 done
 
 echo "[vm_run_demo] running victim Telnet login..."
-gc_run victim /usr/bin/python3 /home/$GUEST_USER/project/telnet_login.py "$SERVER_IP" "$DEMO_USER" "$DEMO_PASS"
+gc_run victim /usr/bin/python3 /home/$GUEST_USER/project/telnet_login.py "$SERVER_IP" "$TELNET_USER" "$TELNET_PASS"
 
 sleep 1
 echo ""

@@ -47,7 +47,7 @@ for vm in victim server attacker; do
 done
 
 echo "[vm_bootstrap] installing Telnet daemon + demo user on server..."
-gc_sudo server bash /home/$GUEST_USER/project/setup_telnet.sh "$DEMO_USER"
+gc_sudo server bash /home/$GUEST_USER/project/setup_telnet.sh "$TELNET_USER" "$TELNET_PASS"
 
 echo "[vm_bootstrap] installing SSH server on server (for the defense demo)..."
 gc_sudo server apt-get install -y openssh-server

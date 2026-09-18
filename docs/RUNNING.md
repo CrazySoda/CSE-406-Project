@@ -29,7 +29,7 @@ You'll use **3 terminals**.
 uv run python server/http_server.py 8080
 ```
 
-Leave it running. It prints `HTTP Basic-Auth server listening on :8080 (demo user: bob:hunter2)`.
+Leave it running. It prints `HTTP Basic-Auth server listening on :8080 (demo user: arzon:2105128)`.
 
 For Telnet, use the **mock** server (`server/mock_telnet_server.py`) for this local test —
 it behaves like a real telnet daemon (login:/Password: prompts, byte-at-a-time reads) without
@@ -61,41 +61,41 @@ actual VM demo in Part B, where the HTTP/Telnet daemons run on their standard po
 
 ```bash
 # HTTP login against the server started above
-uv run python victim/http_login.py 127.0.0.1 bob hunter2 8080
+uv run python victim/http_login.py 127.0.0.1 arzon 2105128 8080
 ```
 
 Expected in Terminal 3:
 ```
-[victim] Logging in to http://127.0.0.1:8080/ as bob...
+[victim] Logging in to http://127.0.0.1:8080/ as arzon...
 [victim] Server responded 200: Welcome, authenticated user.
 ```
 
 Expected in Terminal 2 (sniffer), among the per-frame lines:
 ```
-*** HTTP credentials recovered: bob:hunter2 ***
+*** HTTP credentials recovered: arzon:2105128 ***
 ```
 
 Now the Telnet login:
 
 ```bash
-uv run python victim/telnet_login.py 127.0.0.1 bob hunter2 2323
+uv run python victim/telnet_login.py 127.0.0.1 arian 2105143 2323
 ```
 
 Expected in Terminal 3:
 ```
 [victim] Server: Debian GNU/Linux
 login:
-[victim] Typing username: bob
+[victim] Typing username: arian
 [victim] Server: Password:
 [victim] Typing password: ****
 [victim] Server: Last login: just now
-bob@server:~$
+arian@server:~$
 ```
 
 Expected in Terminal 2 (sniffer):
 ```
-Telnet username captured: bob
-*** Telnet credentials recovered: bob:hunter2 ***
+Telnet username captured: arian
+*** Telnet credentials recovered: arian:2105143 ***
 ```
 
 ### Cleanup
@@ -124,7 +124,7 @@ Full detail is in `SETUP.md`; short version:
    ```bash
    cd server
    sudo python3 http_server.py 80
-   sudo ./setup_telnet.sh bob      # real telnetd this time, not the mock
+   sudo ./setup_telnet.sh arian 2105143   # real telnetd this time, not the mock
    ```
 5. **On the attacker VM**:
    ```bash
@@ -135,8 +135,8 @@ Full detail is in `SETUP.md`; short version:
 6. **On the victim VM**:
    ```bash
    cd victim
-   python3 http_login.py 192.168.56.12 bob hunter2
-   python3 telnet_login.py 192.168.56.12 bob hunter2
+   python3 http_login.py 192.168.56.12 arzon 2105128
+   python3 telnet_login.py 192.168.56.12 arian 2105143
    ```
 7. Confirm the attacker prints the same `*** ... credentials recovered ***` lines as above, and
    that the packet counts/fields match `tcpdump`'s view of the same traffic.

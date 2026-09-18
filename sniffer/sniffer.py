@@ -28,6 +28,15 @@ ETH_HEADER_LEN = 14
 ETH_P_IP = 0x0800
 IPPROTO_TCP = 6
 
+# AF_PACKET packet type (sockaddr_ll sll_pkttype). On loopback the same host is
+# both sender and receiver, so every frame is delivered to the raw socket twice:
+# once as PACKET_OUTGOING (the copy being sent) and once as PACKET_HOST (the
+# looped-back copy). Counting both doubles per-keystroke Telnet bytes into
+# "bboobb". A real attacker NIC only ever *receives* mirrored traffic, so it
+# never sees PACKET_OUTGOING -- skipping it here makes the local loopback smoke
+# test behave exactly like the VM demo.
+PACKET_OUTGOING = 4
+
 # Defaults match the real protocols (RFC-assigned ports). Overridable via CLI
 # args so this same tool can be pointed at non-privileged ports (e.g. 8080 /
 # 2323) for a local smoke test where the demo server/telnet stand-in aren't
@@ -220,7 +229,11 @@ def main():
     log(f"--- sniffer started on {iface} at {datetime.now().isoformat()} ---")
 
     while True:
-        frame, _ = sock.recvfrom(65535)
+        frame, addr = sock.recvfrom(65535)
+        # addr = (ifname, proto, pkttype, hatype, hwaddr); skip our own outgoing
+        # copies so loopback capture matches a real receive-only attacker NIC.
+        if addr[2] == PACKET_OUTGOING:
+            continue
 
         eth = parse_ethernet(frame)
         if eth is None:

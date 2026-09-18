@@ -165,7 +165,7 @@ VBoxManage guestcontrol server run --username ubuntu --password ubuntu \
   "nohup python3 /home/ubuntu/project/server/http_server.py 80 > /home/ubuntu/http_server.log 2>&1 &"
 
 VBoxManage guestcontrol server run --username ubuntu --password ubuntu \
-  --exe /usr/bin/sudo -- sudo bash /home/ubuntu/project/server/setup_telnet.sh bob
+  --exe /usr/bin/sudo -- sudo bash /home/ubuntu/project/server/setup_telnet.sh arian 2105143
 ```
 
 ## 5. Attacker VM
@@ -191,11 +191,11 @@ In a separate host terminal (while the sniffer above is still running):
 ```bash
 VBoxManage guestcontrol victim run --username ubuntu --password ubuntu \
   --exe /usr/bin/python3 -- python3 /home/ubuntu/project/victim/http_login.py \
-  192.168.56.12 bob hunter2
+  192.168.56.12 arzon 2105128
 
 VBoxManage guestcontrol victim run --username ubuntu --password ubuntu \
   --exe /usr/bin/python3 -- python3 /home/ubuntu/project/victim/telnet_login.py \
-  192.168.56.12 bob hunter2
+  192.168.56.12 arian 2105143
 ```
 
 ## 7. Expected result
@@ -203,8 +203,8 @@ VBoxManage guestcontrol victim run --username ubuntu --password ubuntu \
 On the attacker's terminal (from step 5) / `sniffer_session.log` inside the attacker VM:
 
 - A line per captured HTTP/Telnet frame (timestamp, MAC/IP/port).
-- `*** HTTP credentials recovered: bob:hunter2 ***`
-- `*** Telnet credentials recovered: bob:hunter2 ***`
+- `*** HTTP credentials recovered: arzon:2105128 ***`
+- `*** Telnet credentials recovered: arian:2105143 ***`
 
 Cross-check against `capture.pcap` (copy it out with
 `VBoxManage guestcontrol attacker copyfrom --username ubuntu --password ubuntu /home/ubuntu/capture.pcap .`

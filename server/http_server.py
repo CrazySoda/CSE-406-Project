@@ -6,17 +6,17 @@ the Authorization header travels in the clear on the wire, as required by
 the attack being demonstrated.
 
 Usage:
-    python3 http_server.py [port]
+    python3 http_server.py [port] [username] [password]
 
-Default demo credentials: bob / hunter2
+Default demo credentials: arzon / 2105128
 """
 
 import base64
 import sys
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
-USERNAME = "bob"
-PASSWORD = "hunter2"
+USERNAME = "arzon"
+PASSWORD = "2105128"
 REALM = "CSE406 Demo Server"
 
 
@@ -53,7 +53,12 @@ class BasicAuthHandler(BaseHTTPRequestHandler):
 
 
 def main():
+    global USERNAME, PASSWORD
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 80
+    if len(sys.argv) > 2:
+        USERNAME = sys.argv[2]
+    if len(sys.argv) > 3:
+        PASSWORD = sys.argv[3]
     server = HTTPServer(("0.0.0.0", port), BasicAuthHandler)
     print(f"HTTP Basic-Auth server listening on :{port} "
           f"(demo user: {USERNAME}:{PASSWORD})")

@@ -2,11 +2,12 @@
 # Sets up a Telnet daemon on the "server" VM for the packet-sniffing demo.
 # Run with sudo on a Debian/Ubuntu-based VM.
 #
-# Usage: sudo ./setup_telnet.sh [demo_username]
+# Usage: sudo ./setup_telnet.sh [username] [password]
 
 set -euo pipefail
 
-DEMO_USER="${1:-bob}"
+DEMO_USER="${1:-arian}"
+DEMO_PASS="${2:-2105143}"
 
 echo "[*] Installing telnet daemon (inetutils-telnetd + xinetd)..."
 apt-get update -qq
@@ -31,8 +32,8 @@ EOF
 echo "[*] Creating demo user '${DEMO_USER}' (if it doesn't already exist)..."
 if ! id "${DEMO_USER}" &>/dev/null; then
     useradd -m -s /bin/bash "${DEMO_USER}"
-    echo "${DEMO_USER}:hunter2" | chpasswd
-    echo "    Created ${DEMO_USER}:hunter2"
+    echo "${DEMO_USER}:${DEMO_PASS}" | chpasswd
+    echo "    Created ${DEMO_USER}:${DEMO_PASS}"
 else
     echo "    User ${DEMO_USER} already exists, leaving password unchanged."
 fi

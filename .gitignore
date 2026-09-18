@@ -2,3 +2,5 @@
 __pycache__/
 *.pyc
 /sniffer_session.log
+.history/
+/Pasted image.png
