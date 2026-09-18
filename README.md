@@ -35,7 +35,8 @@ cd CSE-406-Project
 
 Starts the HTTP + mock Telnet servers, the sniffer on loopback (prompts for your `sudo` password
 — needed for the raw socket), runs both victim logins, and prints what got recovered:
-`*** HTTP credentials recovered: bob:hunter2 ***` and the same for Telnet. Full details,
+`*** HTTP credentials recovered: arzon:2105128 ***` and
+`*** Telnet credentials recovered: arian:2105143 ***`. Full details,
 troubleshooting, and the equivalent commands run by hand: **[docs/RUNNING.md](docs/RUNNING.md)**.
 
 ## Full 3-VM demo (matches the design report exactly)

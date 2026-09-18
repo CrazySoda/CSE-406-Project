@@ -34,10 +34,10 @@ SNIFFER_PID=$!
 sleep 1
 
 echo "[local_demo] running HTTP login..."
-uv run python victim/http_login.py 127.0.0.1 bob hunter2 "$HTTP_PORT"
+uv run python victim/http_login.py 127.0.0.1 arzon 2105128 "$HTTP_PORT"
 
 echo "[local_demo] running Telnet login..."
-uv run python victim/telnet_login.py 127.0.0.1 bob hunter2 "$TELNET_PORT"
+uv run python victim/telnet_login.py 127.0.0.1 arian 2105143 "$TELNET_PORT"
 
 sleep 1
 echo ""

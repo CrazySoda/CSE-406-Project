@@ -9,14 +9,16 @@ sequence and byte-by-byte echo behavior a real telnet session produces, so
 the sniffer's reassembly logic can be exercised end-to-end on loopback.
 
 Usage:
-    python3 mock_telnet_server.py [port]
+    python3 mock_telnet_server.py [port] [username] [password]
+
+Default demo credentials: arian / 2105143
 """
 
 import socket
 import sys
 
-USERNAME = "bob"
-PASSWORD = "hunter2"
+USERNAME = "arian"
+PASSWORD = "2105143"
 
 
 def handle_client(conn: socket.socket):
@@ -47,7 +49,12 @@ def read_line(conn: socket.socket) -> str:
 
 
 def main():
+    global USERNAME, PASSWORD
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 2323
+    if len(sys.argv) > 2:
+        USERNAME = sys.argv[2]
+    if len(sys.argv) > 3:
+        PASSWORD = sys.argv[3]
     srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     srv.bind(("0.0.0.0", port))

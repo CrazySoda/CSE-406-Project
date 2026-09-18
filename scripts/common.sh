@@ -10,8 +10,13 @@ GUEST_IFACE=enp0s8   # VirtualBox's usual name for the 2nd NIC on Ubuntu 24.04; 
 
 GUEST_USER=ubuntu
 GUEST_PASS=ubuntu
-DEMO_USER=bob
-DEMO_PASS=hunter2
+# Demo credentials -- HTTP and Telnet use separate accounts. Server-side
+# defaults live in server/http_server.py and server/setup_telnet.sh; these
+# must match so the victim logins succeed.
+HTTP_USER=arzon
+HTTP_PASS=2105128
+TELNET_USER=arian
+TELNET_PASS=2105143
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 

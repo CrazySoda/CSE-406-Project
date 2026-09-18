@@ -77,8 +77,8 @@ def main():
         sys.exit(1)
 
     server_ip = sys.argv[1]
-    username = sys.argv[2] if len(sys.argv) > 2 else "bob"
-    password = sys.argv[3] if len(sys.argv) > 3 else "hunter2"
+    username = sys.argv[2] if len(sys.argv) > 2 else "arian"
+    password = sys.argv[3] if len(sys.argv) > 3 else "2105143"
     port = int(sys.argv[4]) if len(sys.argv) > 4 else 23
 
     print(f"[victim] Connecting to telnet://{server_ip}:{port} ...")

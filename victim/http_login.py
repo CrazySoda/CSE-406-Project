@@ -19,8 +19,8 @@ def main():
         sys.exit(1)
 
     server_ip = sys.argv[1]
-    username = sys.argv[2] if len(sys.argv) > 2 else "bob"
-    password = sys.argv[3] if len(sys.argv) > 3 else "hunter2"
+    username = sys.argv[2] if len(sys.argv) > 2 else "arzon"
+    password = sys.argv[3] if len(sys.argv) > 3 else "2105128"
     port = sys.argv[4] if len(sys.argv) > 4 else "80"
 
     url = f"http://{server_ip}:{port}/"
